@@ -15,13 +15,15 @@ How did you approach the problem? Consider why data structures are important to 
   
 How did you overcome any roadblocks you encountered while going through the activities or project?
 
-    when happening upon a roadbock I would first look to past assignments and zybooks to see if there would be an explanation or example
-    of the issues that I or another has solved in the past. If that didn't work I would search for a simular issue on stack overflow. My
-    last resort would be to ask copilot, with a grain of salt, this seemed most of the time to cause more problems than help.
+    when happening upon a roadbock I would first look to past assignments and zybooks to see if there would be an explanation
+    or example of the issues that I or another has solved in the past. If that didn't work I would search for a simular issue 
+    on stack overflow. My last resort would be to ask copilot, with a grain of salt, this seemed most of the time to cause 
+    more problems than help.
 
 How has your work on this project evolved the way you write programs that are maintainable, readable, and adaptable?
 
-    In my opinion, I have learned how to block out my functions and variables better. I have always tried to put as little code 
-    in the main function as possible other than calling the functions that had already been made. I learned if the code is readable, don't
-    comment it. If you need a reference or the function is to convoluted and can not be optomized then, yes, comment it.
+    In my opinion, I have learned how to block out my functions and variables better. I have always tried to put as
+    little code in the main function as possible other than calling the functions that had already been made. I learned
+    if the code is readable, don't comment it. If you need a reference or the function is to convoluted and can not
+    be optomized then, yes, comment it.
     
