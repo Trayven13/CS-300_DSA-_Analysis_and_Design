@@ -1,0 +1,283 @@
+//============================================================================
+// Name        : ProjectTwo.cpp
+// Author      : Trayven Nixon
+// Version     : 1.0
+// Description : CS 300 Project two, CL Program for ABCU 
+//============================================================================
+
+
+#include <algorithm>
+#include <climits>
+#include <iostream>
+#include <string> 
+#include <vector>
+#include <fstream>
+#include <sstream>
+
+
+using namespace std;
+
+
+int menuSelection = 0;
+string CSVPath;
+string userCourseId;
+const unsigned int DEFAULT_SIZE = 30;
+
+
+
+//=======================================================================================================
+//Course Struct
+//=======================================================================================================
+
+struct Course {
+	string courseId; // unique identifier
+	string courseName;
+    vector<string> prerequisites;
+};
+
+//=======================================================================================================
+//Function Declarations and Class
+//=======================================================================================================
+
+ // implement hash table with chaining.
+class HashTable {
+
+private:
+    // Define structures to hold courses
+    struct Node {
+        Course course;
+        unsigned int key;
+        Node* next;
+
+        Node() {
+            key = UINT_MAX;
+            next = nullptr;
+        }
+
+        Node(Course aCourse) : Node() {
+            course = aCourse;
+        }
+
+        Node(Course aCourse, unsigned int aKey) : Node(aCourse) {
+            key = aKey;
+        }
+    };
+
+    vector<Node> nodes;
+
+    unsigned int tableSize = DEFAULT_SIZE;
+
+    unsigned int hash(const string& courseId);
+
+public:
+    HashTable();
+    HashTable(unsigned int size);
+    void Insert(Course course);
+    void PrintAll();
+    Course Search(Course course);
+};
+
+//Default constructor
+HashTable::HashTable() {
+
+    nodes.resize(tableSize);
+}
+
+HashTable::HashTable(unsigned int size) {
+
+    this->tableSize = size;
+    nodes.resize(tableSize);
+}
+
+ /* Calculate the hash value of a given key. (usint the modulo hash is good for integers
+but not as good for strings.*/
+unsigned int HashTable::hash(const string& courseId) {
+    unsigned int hash = 0;
+    for (char c : courseId) {
+        hash = hash * 31 + c;
+    }
+    return hash % tableSize;
+}
+
+
+//=======================================================================================================
+//Function Definitions
+//=======================================================================================================
+
+// User Interface (Menu)
+void displayMenu() {
+    cout << endl;
+    cout << "|===============================|" << endl;
+	cout << "| Welcome to the course planner.|" << endl;
+    cout << "|===============================|" << endl;
+	cout << "| 1. Load Data Structure.       |" << endl;
+	cout << "| 2. Print Course List.         |" << endl;
+	cout << "| 3. Search for Course.         |" << endl;
+    cout << "| 9. Exit                       |" << endl;
+    cout << "|===============================|" << endl;
+	cout << "  What would you like to do?: ";
+}
+
+// Get course info from .CSV and  call Insert to load data in to hash table Courses
+void loadCourses(HashTable* hashTable) {
+    cout << "Please input the file path you would like to use: ";
+    cin.ignore();
+     getline(cin, CSVPath); //Test with C:/Users/trayv/Downloads/CS 300 ABCU_Advising_Program_Input.csv;
+    cout << endl << "Loading CSV file " << CSVPath << endl << endl;
+
+    ifstream file(CSVPath);
+    if (!file.is_open()) {
+        cout << "Error: Could not open file " << CSVPath << endl;
+        return;
+    }
+
+    string line;
+    getline(file, line);
+
+    while (getline(file, line)) {
+        stringstream ss(line);
+        Course course;
+
+        getline(ss, course.courseId, ',');
+        getline(ss, course.courseName, ',');
+
+        string prereq;
+        while (getline(ss, prereq, ',')) {
+            course.prerequisites.push_back(prereq);
+        }
+
+        cout << "Course #: " << course.courseId << ", Course Name: " 
+            << course.courseName << " , Prerequisites: ";
+        for (const string& prereq : course.prerequisites) {
+            cout << prereq << " ";
+        }
+        cout << endl;
+
+        hashTable->Insert(course);
+    }
+
+    file.close();
+}
+
+/* Insert courses to hash table - The courses will also be sorted as it is loaded into the program.
+This saves from having to use a temp vector to sort the table later on. */
+void HashTable::Insert(Course course) {
+
+    unsigned int key = hash(course.courseId);
+
+    Node* newNode = new Node(course, key);
+
+    if (nodes[key].key == UINT_MAX) {
+        nodes[key] = *newNode;
+    }
+    else {
+        Node* current = &nodes[key];
+        Node* previous = nullptr;
+
+        while (current != nullptr && current->course.courseId < course.courseId) {
+            previous = current;
+            current = current->next;
+        }
+
+        if (previous == nullptr) {
+            newNode->next = nodes[key].next;
+            nodes[key] = *newNode;
+        }
+        else {
+            previous->next = newNode;
+            newNode->next = current;
+        }
+    }
+}
+
+ //Print all Courses: course # and course name
+void HashTable::PrintAll() {
+    cout << endl;
+
+    for (unsigned int i = 0; i < tableSize; ++i) {
+        Node* node = &nodes[i];
+        while (node != nullptr && node->key != UINT_MAX) {
+            cout << node->course.courseId << " | " << node->course.courseName << endl;
+            node = node->next;
+        }
+    }
+}
+
+ // Search for the specified courseId
+Course HashTable::Search(Course course) {
+
+    unsigned int key = hash(course.courseId);
+
+    Node* node = &(nodes.at(key));
+
+    while (node != nullptr) {
+        if (node->course.courseId == course.courseId) {
+            return node->course;
+        }
+        node = node->next;
+    }
+    return Course();
+}
+
+// Display Courses: course #, course name, and any prerequisites that it may have.
+void displayCourse(Course course) {
+    cout << "Course ID: " << course.courseId << endl;
+    cout << "Course Name: " << course.courseName << endl;
+    cout << "Prerequisites: ";
+    for (const string& prereq : course.prerequisites) {
+        cout << prereq << " ";
+    }
+    cout << endl << endl;
+}
+
+// Once menu selection has been made, What to do.
+void handleMenuSelection(int menuSelection, HashTable& hashTable) {
+	switch (menuSelection) {
+	case 1:
+        loadCourses(&hashTable);
+		break;
+
+	case 2:
+        hashTable.PrintAll();
+		break;
+
+	case 3:
+        cout << "What Course do you want to know about? ";
+        cin >> userCourseId;
+        cout << endl;
+        {
+            Course course;
+            course.courseId = userCourseId;
+            Course foundCourse = hashTable.Search(course);
+            if (foundCourse.courseId.empty()) {
+                cout << "Course not found." << endl;
+                cin.ignore();
+                break;
+            } else {
+                displayCourse(foundCourse);
+                break;
+            }
+        }
+    case 9:
+        cout << endl << "Thank you for using the course planner!" << endl;
+        break;
+
+    default:
+        cout << "Please input a valid option" << endl << endl;
+		break;
+	}
+}
+
+//======================================================================================================
+// Main
+//======================================================================================================
+int main() {
+    HashTable hashTable;
+
+    while (menuSelection != 9) {
+        displayMenu();
+        cin >> menuSelection;
+        handleMenuSelection(menuSelection, hashTable);
+    }	
+    return 0;
+}
